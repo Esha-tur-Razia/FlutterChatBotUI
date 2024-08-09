@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:openim/openim.dart' as openim;
 
 void main() {
   runApp(MyApp());
+  openim.OpenIM.init(appKey: 'your_app_key', apiUrl: 'your_api_url');
 }
 
 class MyApp extends StatelessWidget {
@@ -23,59 +25,47 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _selectedButtonIndex = -1;
   final TextEditingController _controller = TextEditingController();
-  final List<ChatMessage> _messages = [
-    ChatMessage(
-      text: "Hello, how are you?",
-      isSentByMe: true,
-      messageType: MessageType.text,
-    ),
-    ChatMessage(
-      text: "I'm good, thank you! How about you?",
-      isSentByMe: false,
-      messageType: MessageType.text,
-    ),
-    ChatMessage(
-      text: "I'm doing well, thanks for asking.",
-      isSentByMe: true,
-      messageType: MessageType.text,
-    ),
-  ];
+  final List<ChatMessage> _messages = [];
 
-  void _sendMessage() {
-    if (_controller.text.isNotEmpty) {
-      setState(() {
-        if (_controller.text.contains('117')) {
-          _messages.add(ChatMessage(
-            text: _controller.text,
-            isSentByMe: false,
-            messageType: MessageType.reservation,
-          ));
-        } else {
-          _messages.add(ChatMessage(
-            text: _controller.text,
-            isSentByMe: true,
-            messageType: MessageType.text,
-          ));
-        }
-        _controller.clear();
-
-        // Generate automatic response
-        _generateAutomaticResponse();
-      });
-    }
+  @override
+  void initState() {
+    super.initState();
+    _initOpenIM();
   }
 
-  void _generateAutomaticResponse() {
-    // Simulate a delay before sending the automatic response
-    Future.delayed(Duration(seconds: 1), () {
+  void _initOpenIM() async {
+    openim.OpenIM.init(appKey: 'your_app_key', apiUrl: 'your_api_url');
+    openim.OpenIM.onNewMessage((message) {
       setState(() {
         _messages.add(ChatMessage(
-          text: "This is an automatic response.",
+          text: message,
           isSentByMe: false,
           messageType: MessageType.text,
         ));
       });
     });
+  }
+
+  void _sendMessage() async {
+    if (_controller.text.isNotEmpty) {
+      // Replace with actual method to send a message in OpenIM
+      try {
+        await openim.OpenIM.sendMessage(
+          receiverID: 'receiver_user_id',
+          messageContent: _controller.text,
+        );
+        setState(() {
+          _messages.add(ChatMessage(
+            text: _controller.text,
+            isSentByMe: true,
+            messageType: MessageType.text,
+          ));
+          _controller.clear();
+        });
+      } catch (e) {
+        print('Error sending message: $e');
+      }
+    }
   }
 
   @override
@@ -93,15 +83,13 @@ class _MyHomePageState extends State<MyHomePage> {
           double rightRectangleHeight = screenHeight * 1.116;
 
           double whiteRectangleWidth = screenWidth * 0.588;
-          double whiteRectangleHeight = screenHeight * 0.65; // Adjusted height
+          double whiteRectangleHeight = screenHeight * 0.65;
           double whiteRectangleTop = screenHeight * 0.0128;
           double whiteRectangleLeft = screenWidth * 0.203;
 
-          double bottomRectangleHeight =
-              screenHeight * 0.3; // New container height
-          double bottomRectangleTop = whiteRectangleTop +
-              whiteRectangleHeight +
-              10; // Positioned below the existing white rectangle
+          double bottomRectangleHeight = screenHeight * 0.3;
+          double bottomRectangleTop =
+              whiteRectangleTop + whiteRectangleHeight + 10;
 
           return Center(
             child: Container(
@@ -158,11 +146,14 @@ class _MyHomePageState extends State<MyHomePage> {
                                               });
                                             },
                                             style: OutlinedButton.styleFrom(
+                                              foregroundColor: Colors.white,
                                               backgroundColor:
                                                   _selectedButtonIndex == i
                                                       ? Color(0xFFF08D86)
                                                       : Colors.transparent,
-                                              primary: Colors.white,
+                                              disabledForegroundColor:
+                                                  Color(0xFFF08D86)
+                                                      .withOpacity(0.38),
                                               side: BorderSide(
                                                   color: Colors.transparent),
                                               padding: EdgeInsets.symmetric(
@@ -175,12 +166,9 @@ class _MyHomePageState extends State<MyHomePage> {
                                               ),
                                               textStyle: TextStyle(
                                                   color: Colors.white),
-                                              onSurface: Color(0xFFF08D86),
-                                              // Pressed color
                                             ),
                                             child: Text(
-                                              'Client ${i + 1} ( Room no  ${i + 12} )',
-                                            ),
+                                                'Client ${i + 1} ( Room no  ${i + 12} )'),
                                           ),
                                         ),
                                     ],
@@ -220,7 +208,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               ElevatedButton(
                                 onPressed: () {},
                                 style: ElevatedButton.styleFrom(
-                                  primary: Color(0xFFF08D86),
+                                  backgroundColor: Color(0xFFF08D86),
                                   minimumSize:
                                       Size(rightRectangleWidth - 20, 50),
                                   shape: RoundedRectangleBorder(
@@ -236,7 +224,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               ElevatedButton(
                                 onPressed: () {},
                                 style: ElevatedButton.styleFrom(
-                                  primary: Color(0xFFF08D86),
+                                  backgroundColor: Color(0xFFF08D86),
                                   minimumSize:
                                       Size(rightRectangleWidth - 20, 50),
                                   shape: RoundedRectangleBorder(
@@ -252,7 +240,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               ElevatedButton(
                                 onPressed: () {},
                                 style: ElevatedButton.styleFrom(
-                                  primary: Color(0xFFF08D86),
+                                  backgroundColor: Color(0xFFF08D86),
                                   minimumSize:
                                       Size(rightRectangleWidth - 20, 50),
                                   shape: RoundedRectangleBorder(
@@ -323,50 +311,33 @@ class _MyHomePageState extends State<MyHomePage> {
                         ],
                       ),
                       child: Padding(
-                        padding: EdgeInsets.all(20.0),
+                        padding: EdgeInsets.all(20),
                         child: Column(
                           children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: _controller,
-                                    decoration: InputDecoration(
-                                      hintText: 'Write message',
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(30),
-                                      ),
-                                      contentPadding: EdgeInsets.symmetric(
-                                          vertical: 10, horizontal: 20),
-                                    ),
-                                  ),
+                            TextField(
+                              controller: _controller,
+                              decoration: InputDecoration(
+                                hintText: 'Enter your message...',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(30),
                                 ),
-                                SizedBox(width: 10),
-                                ElevatedButton(
-                                  onPressed: _sendMessage,
-                                  style: ElevatedButton.styleFrom(
-                                    primary: Color(0xFF818181),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(30),
-                                    ),
-                                    padding: EdgeInsets.symmetric(
-                                        vertical: 10, horizontal: 20),
-                                  ),
-                                  child: Text(
-                                    'Send',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
+                                contentPadding: EdgeInsets.symmetric(
+                                  vertical: 10,
+                                  horizontal: 20,
                                 ),
-                              ],
+                              ),
+                              onSubmitted: (text) => _sendMessage(),
                             ),
                             SizedBox(height: 10),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
                                 ElevatedButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    // Implement the function for "Please put the ID face up"
+                                  },
                                   style: ElevatedButton.styleFrom(
-                                    primary: Color(0xFFF08D86),
+                                    backgroundColor: Color(0xFFF08D86),
                                     minimumSize: Size(
                                         (whiteRectangleWidth - 40) / 2, 50),
                                     shape: RoundedRectangleBorder(
@@ -379,9 +350,11 @@ class _MyHomePageState extends State<MyHomePage> {
                                   ),
                                 ),
                                 ElevatedButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    // Implement the function for "US number only"
+                                  },
                                   style: ElevatedButton.styleFrom(
-                                    primary: Color(0xFFF08D86),
+                                    backgroundColor: Color(0xFFF08D86),
                                     minimumSize: Size(
                                         (whiteRectangleWidth - 40) / 2, 50),
                                     shape: RoundedRectangleBorder(
